@@ -5,32 +5,40 @@ namespace Lib;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        var @event = new DataEvent<string>()
+        var @event = new DataEvent<string>
         {
-            Data = "Hello"
+            Data = "HelloE"
         };
         
-        var componentA = new Component()
+        var componentA = new Component
         {
-            ComponentName = "Component A"
+            ComponentName = "Component A",
+            EventPublisher = null
         };
 
-        var componentB = new Component()
+        var componentB = new Component
         {
-            ComponentName = "Component B"
+            ComponentName = "Component B",
+            EventPublisher = null
         };
 
-        var conditionalSubscription = new ConditionalSubscriptionFactory<string>()
+        var conditionalSubscription = new ConditionalEventPublisherFactory<string>
         {
+            ParameterType = typeof(DataEvent<string>),
             PropertyName = "Data",
+            EqualsTo = "Hello",
             PublishIfTrue = new List<Component> { componentA },
             PublishIfFalse = new List<Component> { componentB },
-            ParameterType = typeof(DataEvent<string>),
-            EqualsTo = "Hello"
         }.Create();
 
-        conditionalSubscription.Publish(@event);
+        var listenerComponent = new Component
+        {
+            ComponentName = "Listener Component",
+            EventPublisher = conditionalSubscription
+        };
+        
+        listenerComponent.InjectEvent(@event);
     }
 }

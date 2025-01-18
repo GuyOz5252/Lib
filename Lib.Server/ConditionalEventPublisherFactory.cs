@@ -3,30 +3,30 @@ using Lib.Events.Abstract;
 
 namespace Lib.Server;
 
-public class ConditionalSubscriptionFactory<T>
+public class ConditionalEventPublisherFactory<T>
 {
+    public Type ParameterType { get; set; }
+    
     public string PropertyName { get; set; }
     
     public T EqualsTo { get; set; }
     
     public List<Component> PublishIfTrue { get; set; }
     
-    public Type ParameterType { get; set; }
-    
     public List<Component> PublishIfFalse { get; set; }
 
-    public ConditionalSubscription Create()
+    public ConditionalEventPublisher Create()
     {
         var eventParameterExpression = Expression.Parameter(typeof(IEvent));
         
         var castedEventParameterExpression = Expression.Convert(eventParameterExpression, ParameterType);
         
         var publishIfTrueBlock = Expression.Block(PublishIfTrue.Select(component =>
-            Expression.Call(Expression.Constant(component), typeof(Component).GetMethod(nameof(Component.Enque))!,
+            Expression.Call(Expression.Constant(component), typeof(Component).GetMethod(nameof(Component.InjectEvent))!,
                 eventParameterExpression)));
         var publishIfTrue = Expression.Lambda<Action<IEvent>>(publishIfTrueBlock, eventParameterExpression);
         var publishIfFalseBlock = Expression.Block(PublishIfFalse.Select(component =>
-            Expression.Call(Expression.Constant(component), typeof(Component).GetMethod(nameof(Component.Enque))!,
+            Expression.Call(Expression.Constant(component), typeof(Component).GetMethod(nameof(Component.InjectEvent))!,
                 eventParameterExpression)));
         var publishIfFalse = Expression.Lambda<Action<IEvent>>(publishIfFalseBlock, eventParameterExpression);
         
@@ -40,6 +40,6 @@ public class ConditionalSubscriptionFactory<T>
         var expression = Expression.Condition(conditionExpression, publishIfTrueExpression, publishIfFalseExpression);
         var lambdaExpression = Expression.Lambda<Action<IEvent>>(expression, eventParameterExpression).Compile();
 
-        return new ConditionalSubscription(lambdaExpression);
+        return new ConditionalEventPublisher(lambdaExpression);
     }
 }

@@ -1,12 +1,13 @@
 using Lib.Events.Abstract;
+using Lib.Server.Abstract;
 
 namespace Lib.Server;
 
-public class ConditionalSubscription
+public class ConditionalEventPublisher : IEventPublisher
 {
     private readonly Action<IEvent> _condition;
 
-    public ConditionalSubscription(Action<IEvent> condition)
+    public ConditionalEventPublisher(Action<IEvent> condition)
     {
         _condition = condition;
     }
